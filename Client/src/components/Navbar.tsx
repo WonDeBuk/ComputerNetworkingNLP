@@ -8,7 +8,7 @@ import {
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useSocket } from "@/components/SocketContext";
+import { useSocket } from "@/Components/SocketContext";
 
 export const Navbar = () => {
   const [ip, setIp] = useState("127.0.0.1");

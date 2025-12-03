@@ -1,55 +1,27 @@
-import { useEffect, useState, useRef } from "react";
+import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Image } from "@heroui/image";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 
-import { useSocket, Screenshot } from "@/components/SocketContext";
-import { CameraIcon } from "@/components/icons";
+import { useSocket, Screenshot } from "@/Components/SocketContext";
+import { CameraIcon } from "@/Components/Icons";
 
 export const ScreenshotView = () => {
-  const { CaptureScreenshot, Screenshots, ScreenshotData, IsServerConnected } =
+  const { CaptureScreenshot, IsScreenshotOn, Screenshots, IsServerConnected } =
     useSocket();
+  const [SelectedFile, SetSelectedFile] = useState<Screenshot | null>(null);
 
-  const [selectedFile, setSelectedFile] = useState<Screenshot | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const previousFilesCountRef = useRef<number>(0);
-
-  // Load media list on mount
-  useEffect(() => {
-    if (IsServerConnected) {
-      GetScreenshots();
-    }
-  }, [IsServerConnected, GetScreenshots]);
-
-  // Select the newest file when list updates if nothing is selected
-  useEffect(() => {
-    if (Screenshots.length > 0 && !selectedFile) {
-      setSelectedFile(Screenshots[0]);
-    }
-  }, [Screenshots, selectedFile]);
-
-  // Reset loading state when a new screenshot is received
-  useEffect(() => {
-    if (isLoading && Screenshots.length > previousFilesCountRef.current) {
-      setIsLoading(false);
-    }
-    previousFilesCountRef.current = Screenshots.length;
-  }, [Screenshots, isLoading]);
-
-  const handleTakeScreenshot = () => {
-    setIsLoading(true);
-    TakeScreenshot();
-    // Loading state will be reset when screenshot_ready event is received
-    // (handled by the useEffect above)
+  const HandleTakeScreenshot = () => {
+    CaptureScreenshot();
   };
 
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString();
+  const FormatTime = (TimeStamp: number) => {
+    return new Date(TimeStamp).toLocaleString();
   };
 
-  const formatSize = (bytes: number) => {
-    return (bytes / 1024).toFixed(2) + " KB";
+  const FormatSize = (Bytes: number) => {
+    return (Bytes / 1024).toFixed(2) + " KB";
   };
 
   return (
@@ -59,16 +31,15 @@ export const ScreenshotView = () => {
         <Button
           color="primary"
           isDisabled={!IsServerConnected}
-          isLoading={isLoading}
-          startContent={!isLoading && <CameraIcon />}
-          onPress={handleTakeScreenshot}
+          isLoading={IsScreenshotOn}
+          startContent={!IsScreenshotOn && <CameraIcon />}
+          onPress={HandleTakeScreenshot}
         >
           Take Screenshot
         </Button>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-4 h-full overflow-hidden p-4 items-center justify-center">
-        {/* Thumbnails List */}
         <Card className="w-full lg:w-1/5 h-full">
           <CardHeader className="pb-0">
             <p className="text-small text-default-500">
@@ -78,24 +49,23 @@ export const ScreenshotView = () => {
           <CardBody className="p-2">
             <ScrollShadow hideScrollBar className="h-full w-full">
               <div className="grid grid-cols-1 gap-2 p-2">
-                {Screenshots.map((file) => (
+                {Screenshots.map((File) => (
                   <div
-                    key={file.id}
-                    className={`cursor-pointer rounded-lg border-2 overflow-hidden transition-all ${
-                      selectedFile?.id === file.id
+                    key={File.TimeStamp}
+                    className={`cursor-pointer rounded-lg border-2 overflow-hidden transition-all ${SelectedFile?.TimeStamp === File.TimeStamp
                         ? "border-primary"
                         : "border-transparent hover:border-default-300"
-                    }`}
-                    onClick={() => setSelectedFile(file)}
+                      }`}
+                    onClick={() => SetSelectedFile(File)}
                   >
                     <Image
-                      alt={file.filename}
+                      alt={File.TimeStamp}
                       className="object-cover w-full aspect-video"
                       radius="none"
-                      src={file.url}
+                      src={File.URL}
                     />
                     <div className="p-1 bg-content2 text-tiny truncate">
-                      {formatTime(file.timestamp)}
+                      {FormatTime(File.TimeStamp)}
                     </div>
                   </div>
                 ))}
@@ -109,35 +79,34 @@ export const ScreenshotView = () => {
           </CardBody>
         </Card>
 
-        {/* Preview Area */}
         <Card className="w-full lg:w-2/3 h-full">
           <CardBody className="flex items-center justify-center p-4">
-            {selectedFile ? (
+            {SelectedFile ? (
               <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
                 <Image
-                  alt={selectedFile.filename}
+                  alt={SelectedFile.TimeStamp}
                   className="max-h-[calc(100vh-250px)] object-contain shadow-lg"
-                  src={selectedFile.url}
+                  src={SelectedFile.URL}
                 />
                 <div className="flex gap-4 items-center bg-background/80 backdrop-blur-md p-2 rounded-full px-4 border border-default-200">
                   <div className="flex flex-col items-center">
-                    <span className="text-tiny text-default-500">FILENAME</span>
+                    <span className="text-tiny text-default-500">FileName</span>
                     <span className="text-small font-bold">
-                      {selectedFile.filename}
+                      {SelectedFile.TimeStamp}
                     </span>
                   </div>
                   <div className="w-px h-8 bg-default-300" />
                   <div className="flex flex-col items-center">
-                    <span className="text-tiny text-default-500">SIZE</span>
+                    <span className="text-tiny text-default-500">Size</span>
                     <span className="text-small font-bold">
-                      {formatSize(selectedFile.size)}
+                      {FormatSize(SelectedFile.Size)}
                     </span>
                   </div>
                   <div className="w-px h-8 bg-default-300" />
                   <div className="flex flex-col items-center">
-                    <span className="text-tiny text-default-500">TIME</span>
+                    <span className="text-tiny text-default-500">Time</span>
                     <span className="text-small font-bold">
-                      {formatTime(selectedFile.timestamp)}
+                      {FormatTime(SelectedFile.TimeStamp)}
                     </span>
                   </div>
                 </div>

@@ -3,11 +3,11 @@ import { Snippet } from "@heroui/snippet";
 import { Code } from "@heroui/code";
 import { button as buttonStyles } from "@heroui/theme";
 
-import { title, subtitle } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
-import { Navbar } from "@/components/Navbar";
-import { Background } from "@/components/background";
-import { useSocket } from "@/components/SocketContext";
+import { title, subtitle } from "@/Components/Primitives";
+import { GithubIcon } from "@/Components/Icons";
+import { Navbar } from "@/Components/Navbar";
+import { Background } from "@/Components/Background";
+import { useSocket } from "@/Components/SocketContext";
 
 export default function IndexPage() {
   const { IsGatewayConnected } = useSocket();

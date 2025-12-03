@@ -1,14 +1,14 @@
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-import { useSocket } from "@/components/SocketContext";
-import { DashboardLayout } from "@/layouts/dashboard-layout";
-import { ProcessView } from "@/components/dashboard/process-view";
-import { ApplicationView } from "@/components/dashboard/application-view";
-import { ScreenshotView } from "@/components/dashboard/screenshot-view";
-import { WebcamView } from "@/components/dashboard/webcam-view";
-import { KeyloggerView } from "@/components/dashboard/keylogger-view";
-import { MaintenanceView } from "@/components/dashboard/maintenance-view";
+import { useSocket } from "@/Components/SocketContext";
+import { DashboardLayout } from "@/Layouts/DashboardLayout";
+import { ProcessView } from "@/Components/Dashboard/Process";
+import { ApplicationView } from "@/Components/Dashboard/Application";
+import { ScreenshotView } from "@/Components/Dashboard/Screenshot";
+import { WebcamView } from "@/Components/Dashboard/Webcam";
+import { KeyloggerView } from "@/Components/Dashboard/KeyLogger";
+import { ControllerView } from "@/Components/Dashboard/Controller";
 
 export default function DashboardPages() {
   const { IsGatewayConnected, IsServerConnected } = useSocket();
@@ -29,10 +29,7 @@ export default function DashboardPages() {
         <Route element={<KeyloggerView />} path="keylogger" />
         <Route element={<ScreenshotView />} path="screenshot" />
         <Route element={<WebcamView />} path="webcam" />
-        <Route
-          element={<MaintenanceView feature="Controller" />}
-          path="controller"
-        />
+        <Route element={<ControllerView />} path="controller" />
       </Route>
     </Routes>
   );

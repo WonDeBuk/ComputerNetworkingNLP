@@ -1,8 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import { ToastProvider } from "@heroui/toast";
 
-import IndexPage from "@/pages/index";
-import DashboardPages from "@/pages/dashboard";
+import IndexPage from "@/Pages/Index";
+import DashboardPages from "@/Pages/Dashboard";
 
 function App() {
   return (

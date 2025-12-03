@@ -3,10 +3,9 @@ import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { Card, CardBody } from "@heroui/card";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { useEffect } from "react";
 
-import { useSocket } from "@/components/SocketContext";
-import { Background } from "@/components/background";
+import { useSocket } from "@/Components/SocketContext";
+import { Background } from "@/Components/Background";
 
 export const DashboardLayout = () => {
   const { IsServerConnected, DisconnectFromServer } = useSocket();

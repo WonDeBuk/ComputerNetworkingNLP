@@ -1,13 +1,14 @@
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { ScrollShadow } from "@heroui/scroll-shadow";
 
-import { useSocket, Webcam } from "@/components/SocketContext";
-import { CameraIcon, PlayIcon, StopIcon } from "@/components/icons";
+import { useSocket, Webcam } from "@/Components/SocketContext";
+import { CameraIcon, PlayIcon, StopIcon } from "@/Components/Icons";
 
 export const WebcamView = () => {
-  const { WebcamRecordings, RecordWebcam, IsServerConnected, IsWebcamOn } = useSocket();
+  const { WebcamRecordings, RecordWebcam, IsServerConnected, IsWebcamOn } =
+    useSocket();
 
   const [SelectedVideo, SetSelectedVideo] = useState<Webcam | null>(null);
   const [Duration, SetDuration] = useState<number>(5);
@@ -41,12 +42,8 @@ export const WebcamView = () => {
           <span className="text-small text-default-500">seconds</span>
           <Button
             color={IsWebcamOn ? "danger" : "primary"}
-            isDisabled={
-              !IsServerConnected || IsWebcamOn
-            }
-            startContent={
-              IsWebcamOn ? <StopIcon /> : <PlayIcon />
-            }
+            isDisabled={!IsServerConnected || IsWebcamOn}
+            startContent={IsWebcamOn ? <StopIcon /> : <PlayIcon />}
             onPress={HandleRecord}
           >
             {IsWebcamOn ? "Recording..." : "Record"}
@@ -67,10 +64,11 @@ export const WebcamView = () => {
                 {WebcamRecordings.map((File) => (
                   <button
                     key={File.TimeStamp}
-                    className={`flex flex-col rounded-medium border-2 overflow-hidden transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary ${SelectedVideo?.TimeStamp === File.TimeStamp
-                      ? "border-primary"
-                      : "border-transparent hover:border-default-300"
-                      }`}
+                    className={`flex flex-col rounded-medium border-2 overflow-hidden transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                      SelectedVideo?.TimeStamp === File.TimeStamp
+                        ? "border-primary"
+                        : "border-transparent hover:border-default-300"
+                    }`}
                     type="button"
                     onClick={() => SetSelectedVideo(File)}
                   >
