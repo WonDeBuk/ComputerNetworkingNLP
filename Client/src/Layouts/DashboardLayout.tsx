@@ -8,7 +8,7 @@ import { useSocket } from "@/Components/SocketContext";
 import { Background } from "@/Components/Background";
 
 export const DashboardLayout = () => {
-  const { IsServerConnected, DisconnectFromServer } = useSocket();
+  const { IsServerConnected, DisconnectFromServer, UpTime, Ping } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -59,9 +59,7 @@ export const DashboardLayout = () => {
           className="flex h-full w-full max-w-3/4 max-h-5/6 bg-white/10 backdrop-blur-sm z-50"
         >
           <CardBody className="flex-row">
-            {/* Sidebar */}
             <div className="w-64 min-w-[16rem] flex flex-col border-r border-divider min-h-full p-4 gap-4">
-              {/* Connection Info */}
               <Card className="bg-content1 shadow-sm">
                 <CardBody className="gap-2">
                   <h3 className="font-bold text-lg">Connection Info</h3>
@@ -78,16 +76,15 @@ export const DashboardLayout = () => {
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-default-500">Ping:</span>
-                    <span className="font-mono">{0} ms</span>
+                    <span className="font-mono">{Ping} ms</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-default-500">Uptime:</span>
-                    <span className="font-mono">{0}s</span>
+                    <span className="font-mono">{UpTime}s</span>
                   </div>
                 </CardBody>
               </Card>
 
-              {/* Navigation */}
               <div className="flex flex-col gap-2 flex-grow">
                 <h3 className="font-bold text-lg px-2">Features</h3>
                 {navItems.map((item) => (

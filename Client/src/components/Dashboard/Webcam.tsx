@@ -64,11 +64,10 @@ export const WebcamView = () => {
                 {WebcamRecordings.map((File) => (
                   <button
                     key={File.TimeStamp}
-                    className={`flex flex-col rounded-medium border-2 overflow-hidden transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                      SelectedVideo?.TimeStamp === File.TimeStamp
+                    className={`flex flex-col rounded-medium border-2 overflow-hidden transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary ${SelectedVideo?.TimeStamp === File.TimeStamp
                         ? "border-primary"
                         : "border-transparent hover:border-default-300"
-                    }`}
+                      }`}
                     type="button"
                     onClick={() => SetSelectedVideo(File)}
                   >
@@ -113,12 +112,16 @@ export const WebcamView = () => {
                   <track kind="captions" />
                 </video>
                 <div className="flex gap-4 items-center bg-background/80 backdrop-blur-md p-2 rounded-full px-4 border border-default-200">
-                  <div className="flex flex-col items-center">
+                  <a
+                    className="flex flex-col items-center hover:text-primary transition-colors cursor-pointer"
+                    download={`Webcam-${SelectedVideo.TimeStamp}.mp4`}
+                    href={SelectedVideo.URL}
+                  >
                     <span className="text-tiny text-default-500">FILENAME</span>
                     <span className="text-small font-bold">
                       {SelectedVideo.TimeStamp.toString() + ".mp4"}
                     </span>
-                  </div>
+                  </a>
                   <div className="w-px h-8 bg-default-300" />
                   <div className="flex flex-col items-center">
                     <span className="text-tiny text-default-500">SIZE</span>

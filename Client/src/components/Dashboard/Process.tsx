@@ -7,20 +7,24 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/table";
+import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { Pagination } from "@heroui/pagination";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Tooltip } from "@heroui/tooltip";
 import { StopIcon } from "../Icons";
-import { useSocket } from "@/Components/SocketContext";
+import { StartableApplication, useSocket } from "@/Components/SocketContext";
 
 export const ProcessView = () => {
   const {
     ProcessList,
+    StartableApplicationList,
     KillProcess,
+    StartProcess,
     SubscribeToProcesses,
     UnsubscribeFromProcesses,
   } = useSocket();
+  const [StartInput, SetStartInput] = useState<string>("");
   const [Page, SetPage] = useState(1);
   const RowsPerPage = 10;
 
@@ -45,10 +49,47 @@ export const ProcessView = () => {
     return ProcessList.slice(StartIndex, EndIndex);
   }, [Page, ProcessList]);
 
+  const OnStartInputChange = (Value: string) => {
+    SetStartInput(Value);
+  };
+
+  const OnSelectionChange = (ID: number | null) => {
+    if (ID !== null) {
+      SetStartInput(StartableApplicationList[ID].Name);
+    } else {
+      SetStartInput(StartInput);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 items-center">
       <div className="flex justify-between items-center gap-4 w-full">
         <h2 className="text-2xl font-bold">Processes</h2>
+        <div className="flex gap-4 items-center">
+          <Autocomplete
+            isVirtualized
+            allowsCustomValue={true}
+            label="Start Process"
+            size="sm"
+            value={StartInput}
+            onInputChange={OnStartInputChange}
+            onSelectionChange={OnSelectionChange}
+          >
+            {StartableApplicationList.map((Item: StartableApplication) => (
+              <AutocompleteItem key={StartableApplicationList.indexOf(Item)}>
+                {Item.Name}
+              </AutocompleteItem>
+            ))}
+          </Autocomplete>
+          <Button
+            color="primary"
+            isDisabled={StartInput === ""}
+            size="sm"
+            onPress={() => StartProcess(StartInput)}
+          >
+            Start
+          </Button>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-default-500 text-sm">Running Processes:</span>
           <Chip color="primary">{ProcessList.length}</Chip>

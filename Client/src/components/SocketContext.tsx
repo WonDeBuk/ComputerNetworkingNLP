@@ -44,6 +44,8 @@ export interface StartableApplication {
 }
 
 interface SocketContextType {
+  UpTime: number;
+  Ping: number;
   IsGatewayConnected: boolean;
   IsServerConnected: boolean;
   GatewayConnectError: string | null;
@@ -106,6 +108,9 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const [IsKeyLoggerOn, SetIsKeyLoggerOn] = useState<boolean>(false);
   const [IsWebcamOn, SetIsWebcamOn] = useState<boolean>(false);
   const [IsScreenshotOn, SetIsScreenshotOn] = useState<boolean>(false);
+  const [UpTime, SetUpTIme] = useState<number>(0);
+  const [Ping, SetPing] = useState<number>(0);
+  const IntervalRef = useRef<NodeJS.Timeout | null>(null);
   const SocketRef = useRef<Socket | null>(null);
 
   const SetupSocketListeners = useCallback((NewSocket: Socket) => {
@@ -134,6 +139,8 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       SetIsWebcamOn(false);
       SetIsScreenshotOn(false);
       SocketRef.current?.disconnect();
+      if (IntervalRef.current) clearInterval(IntervalRef.current);
+      IntervalRef.current = null;
       addToast({
         title: "Disconnected",
         description: "Disconnected from Gateway",
@@ -156,11 +163,21 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
     NewSocket.on("Client:Connect:Success", () => {
       console.log("Connected to Server via Gateway");
       SetIsServerConnected(true);
+      if (IntervalRef.current) clearInterval(IntervalRef.current);
+      IntervalRef.current = setInterval(() => {
+        SetUpTIme((prev) => prev + 1);
+        NewSocket.emit("Ping", Date.now());
+      }, 1000);
       addToast({
         title: "Connected",
         description: "Successfully connected to Server",
         color: "success",
       });
+    });
+
+    NewSocket.on("Pong", (Data: number) => {
+      const Latency = Date.now() - Data;
+      SetPing(Latency);
     });
 
     NewSocket.on("Client:Connect:Error:NotRegistered", () => {
@@ -196,6 +213,8 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       SetIsGatewayConnected(false);
       SetServerConnectError(null);
       SetGatewayConnectError(null);
+      if (IntervalRef.current) clearInterval(IntervalRef.current);
+      IntervalRef.current = null;
       SetProcessList([]);
       SetApplicationList([]);
       SetScreenshots([]);
@@ -216,6 +235,9 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       SetIsGatewayConnected(false);
       SetServerConnectError(null);
       SetGatewayConnectError(null);
+      if (IntervalRef.current) clearInterval(IntervalRef.current);
+      IntervalRef.current = null;
+      SetUpTIme(0);
       SetProcessList([]);
       SetApplicationList([]);
       SetScreenshots([]);
@@ -521,6 +543,8 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   }, []);
 
   const Value: SocketContextType = {
+    UpTime,
+    Ping,
     IsGatewayConnected,
     IsServerConnected,
     GatewayConnectError,

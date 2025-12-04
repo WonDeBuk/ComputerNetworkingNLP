@@ -182,6 +182,12 @@ namespace Server
                     ControllerLock();
                 });
 
+                Client.On("Ping", Response =>
+                {
+                    int Ping = Response.GetValue<int>();
+                    Client.EmitAsync("Pong", Ping);
+                });
+
                 try
                 {
                     await Client.ConnectAsync();
@@ -243,14 +249,26 @@ namespace Server
 
         static void StartProcess(string Input, Action<string, object> Callback)
         {
+            Console.WriteLine(Input);
             if (string.IsNullOrWhiteSpace(Input))
+            {
+                Console.WriteLine("Server > Failed to start process: Input is null or whitespace");
                 return;
-
-            string ApplicationPath = StartableApplications[Input];
+            }
+            Console.WriteLine("Server > Starting process: " + Input);
+            string ApplicationPath = "";
+            if (StartableApplications.ContainsKey(Input))
+            {
+                ApplicationPath = StartableApplications[Input];
+            }
+            else
+            {
+                ApplicationPath = Input;
+            }
             Console.WriteLine(ApplicationPath);
             try
             {
-                Process.Start("cmd.exe", "/c " + "\"" + (string.IsNullOrWhiteSpace(ApplicationPath) ? Input : ApplicationPath) + "\"");
+                Process.Start("cmd.exe", "/c " + "\"" + ApplicationPath + "\"");
             }
             catch (Exception ex)
             {

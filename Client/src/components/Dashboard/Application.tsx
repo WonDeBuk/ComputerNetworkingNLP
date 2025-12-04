@@ -161,7 +161,10 @@ export const ApplicationView = () => {
                     color="danger"
                     size="sm"
                     variant="light"
-                    onPress={() => KillProcess(item.PID)}
+                    onPress={() => {
+                      KillProcess(item.PID);
+                      SetStartInput("");
+                    }}
                   >
                     <StopIcon />
                   </Button>

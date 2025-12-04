@@ -53,8 +53,8 @@ export const ScreenshotView = () => {
                   <div
                     key={File.TimeStamp}
                     className={`cursor-pointer rounded-lg border-2 overflow-hidden transition-all ${SelectedFile?.TimeStamp === File.TimeStamp
-                        ? "border-primary"
-                        : "border-transparent hover:border-default-300"
+                      ? "border-primary"
+                      : "border-transparent hover:border-default-300"
                       }`}
                     onClick={() => SetSelectedFile(File)}
                   >
@@ -83,11 +83,13 @@ export const ScreenshotView = () => {
           <CardBody className="flex items-center justify-center p-4">
             {SelectedFile ? (
               <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
-                <Image
-                  alt={SelectedFile.TimeStamp}
-                  className="max-h-[calc(100vh-250px)] object-contain shadow-lg"
-                  src={SelectedFile.URL}
-                />
+                <a href={SelectedFile.URL} download={`Screenshot-${SelectedFile.TimeStamp}.png`}>
+                  <Image
+                    alt={SelectedFile.TimeStamp}
+                    className="max-h-[calc(100vh-250px)] object-contain shadow-lg"
+                    src={SelectedFile.URL}
+                  />
+                </a>
                 <div className="flex gap-4 items-center bg-background/80 backdrop-blur-md p-2 rounded-full px-4 border border-default-200">
                   <div className="flex flex-col items-center">
                     <span className="text-tiny text-default-500">FileName</span>
