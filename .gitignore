@@ -25,7 +25,6 @@ Server/x64/
 *.user
 *.suo
 *.db
-Server/Dependencies
 Unit Test/
 
 # Node.js (Gateway & FrontEnd)

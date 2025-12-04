@@ -88,7 +88,6 @@ export const ApplicationView = () => {
             color="primary"
             isDisabled={StartInput === ""}
             size="sm"
-            variant="light"
             onPress={() => StartProcess(StartInput)}
           >
             Start
