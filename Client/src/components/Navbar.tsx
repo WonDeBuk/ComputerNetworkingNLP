@@ -11,8 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useSocket } from "@/Components/SocketContext";
 
 export const Navbar = () => {
-  const [ip, setIp] = useState("127.0.0.1");
-  const [port, setPort] = useState("5000"); // Default Gateway Port
+  const [ip, setIp] = useState("");
+  const [port, setPort] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -48,8 +48,6 @@ export const Navbar = () => {
     if (IsGatewayConnected && !IsServerConnected) {
       setTimeout(() => {
         setIsLoading((prev) => (prev ? false : prev));
-
-        setPort((prev) => (prev !== "5000" ? "5000" : prev));
       }, 0);
     }
   }, [IsGatewayConnected, IsServerConnected]);
@@ -87,7 +85,7 @@ export const Navbar = () => {
             </NavbarItem>
             <NavbarItem>
               <Input
-                className="w-20"
+                className="w-32"
                 isDisabled={isLoading}
                 placeholder={
                   !IsGatewayConnected ? "Gateway Port" : "Server Port"

@@ -15,6 +15,10 @@ using SocketIOClient.Transport;
 using System.Text.Json;
 using System.Runtime.InteropServices.Marshalling;
 using System.Runtime.Versioning;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+
 
 namespace Server
 {
@@ -57,7 +61,7 @@ namespace Server
                 Client.OnConnected += async (Sender, E) =>
                 {
                     Console.WriteLine("Server > Connected to Gateway");
-                    await Client.EmitAsync("Server:Register", new { IP = "127.0.0.1", Port = "8080" });
+                    await Client.EmitAsync("Server:Register", new { IP = GetLocalIPv4(), Port = "8080" });
                 };
 
                 Client.OnDisconnected += (Sender, E) =>
@@ -435,6 +439,8 @@ namespace Server
                 {
                     string LocalDatetime = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
 
+                    NativeMethods.SetProcessDPIAware();
+
                     Rectangle Bounds = Rectangle.Empty;
                     foreach (var Screen in System.Windows.Forms.Screen.AllScreens)
                     {
@@ -642,10 +648,35 @@ namespace Server
             }
         }
 
+        static string GetLocalIPv4()
+        {
+            foreach (var NetworkInterface in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (NetworkInterface.OperationalStatus != OperationalStatus.Up) continue;
+                if (NetworkInterface.NetworkInterfaceType == NetworkInterfaceType.Loopback) continue;
+                if (NetworkInterface.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
+
+                var Properties = NetworkInterface.GetIPProperties();
+
+                foreach (var IP in Properties.UnicastAddresses)
+                {
+                    if (IP.Address.AddressFamily == AddressFamily.InterNetwork)
+                    {
+                        return IP.Address.ToString();
+                    }
+                }
+            }
+
+            return "127.0.0.1";
+        }
+        
         static class NativeMethods
         {
             [DllImport("user32.dll")]
             public static extern bool LockWorkStation();
+
+            [DllImport("user32.dll")]
+            public static extern bool SetProcessDPIAware();
 
             [DllImport("PowrProf.dll", SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]

