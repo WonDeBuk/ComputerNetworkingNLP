@@ -13,7 +13,6 @@ export const KeyloggerView = () => {
     IsServerConnected,
     StartKeyLogger,
     StopKeyLogger,
-    PrintKeyLogger,
   } = useSocket();
 
   const [SelectedLogIndex, SetSelectedLogIndex] = useState<number | null>(null);
@@ -24,10 +23,6 @@ export const KeyloggerView = () => {
     } else {
       StartKeyLogger();
     }
-  };
-
-  const HandlePrint = () => {
-    PrintKeyLogger();
   };
 
   const FormatTime = (TimeStamp: number) => {
@@ -46,13 +41,6 @@ export const KeyloggerView = () => {
             onPress={HandleStartStop}
           >
             {IsKeyLoggerOn ? "Stop KeyLogger" : "Start KeyLogger"}
-          </Button>
-          <Button
-            color="secondary"
-            isDisabled={!IsKeyLoggerOn || !IsServerConnected}
-            onPress={HandlePrint}
-          >
-            Print
           </Button>
         </div>
       </div>

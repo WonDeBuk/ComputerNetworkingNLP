@@ -121,6 +121,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       addToast({
         title: "Connected",
         description: "Successfully connected to Gateway",
+        color: "success",
       });
     });
 
@@ -153,6 +154,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       addToast({
         title: "Connection Error",
         description: Error.message,
+        color: "danger",
       });
     });
 
@@ -250,6 +252,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
       addToast({
         title: "Disconnected",
         description: "Server Disconnected",
+        color: "danger",
       });
     });
 
@@ -430,6 +433,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({
         addToast({
           title: "Error",
           description: "Not connected to Gateway",
+          color: "danger",
         });
       }
     },

@@ -56,8 +56,12 @@ export const Navbar = () => {
     setIsLoading(true);
     if (!IsGatewayConnected) {
       ConnectToGateway(ip, port);
+      setIp("");
+      setPort("");
     } else {
       ConnectToServer(ip, port);
+      setIp("");
+      setPort("");
     }
   };
 
